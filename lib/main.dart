@@ -51,7 +51,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Celebrities',
+      title: '臺灣歷史人物',
       theme: ThemeData.light(),
       darkTheme: ThemeData.dark(),
       themeMode: _themeMode,
@@ -111,7 +111,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       /*appBar: AppBar(title: const Text('Celebrities')),*/
       appBar: AppBar(
-        title: const Text('Celebrities'),
+        title: const Text('臺灣歷史人物'),
         actions: [
           Row(
             children: [
@@ -186,6 +186,13 @@ class _HomePageState extends State<HomePage> {
                       await _twRecorder.stopRecorder();
                       isTwRecording = false;
 
+                      final file = File(twPath);
+                      if (!(await file.exists())) {
+                        _searchController.text = '錄音檔不存在';
+                        return;
+                      }
+
+
                       // 呼叫 tw_stt.dart 中的辨識 API
                       final bytes = await File(twPath).readAsBytes();
                       final base64Audio = base64Encode(bytes);
@@ -193,12 +200,16 @@ class _HomePageState extends State<HomePage> {
                       try {
                         final response = await http.post(
                           Uri.parse('http://140.116.245.149:5002/proxy'),
-                          body: {
+                          headers: {'Content-Type': 'application/json'},
+                          body: jsonEncode({
                             'lang': 'TA and ZH Medical V1',
                             'token': '2025@test@asr',
                             'audio': base64Audio,
-                          },
+                          }),
                         );
+                        print('Base64 audio length: ${base64Audio.length}');
+
+
 
                         if (response.statusCode == 200) {
                           final result = jsonDecode(response.body);
@@ -208,9 +219,12 @@ class _HomePageState extends State<HomePage> {
                             _searchController.text = 'API 回傳缺少 sentence 欄位';
                           }
                         } else {
+                          print('辨識失敗 HTTP status: ${response.statusCode}');
+                          print('response body: ${response.body}');
                           _searchController.text = '辨識失敗：${response.body}';
                         }
                       } catch (e) {
+                        print('辨識錯誤細節：$e');
                         _searchController.text = '辨識過程出錯：$e';
                       }
                     } else {
