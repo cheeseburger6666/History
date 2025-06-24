@@ -10,6 +10,10 @@ import 'package:just_audio/just_audio.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:celebrities/tw_stt.dart'; // 台語 API
+import 'dart:io';          // 提供 File 類別
+import 'dart:convert';     // 提供 base64Encode、jsonDecode
+import 'package:http/http.dart' as http; // 提供 http.post（注意要裝 http 套件）
+
 
 final record = AudioRecorder();
 final player = AudioPlayer();
@@ -98,7 +102,7 @@ class _HomePageState extends State<HomePage> {
 
   bool isRecording = false;
 
-  void searchCelebrities(String keyword){
+  void _searchCelebrities(String keyword){
     
   }
   
@@ -131,7 +135,37 @@ class _HomePageState extends State<HomePage> {
                 width: 40,
                 height: 40,
                 child: FloatingActionButton.extended(
-                  onPressed: () async { ... }, // 用原本的 record + request
+                  onPressed: () async {
+                    final tempPath = await getTemporaryDirectory();
+                    String path = "${tempPath.path}/audio.wav";
+
+                    if (isRecording) {
+                      // 停止錄音
+                      await record.stop();
+                      String? result = await request(path);
+                      if (result != null) {
+                        _searchController.text = result;
+                      } else {
+                        _searchController.text = "";
+                      }
+                      isRecording = false;
+                    } else {
+                      // 開始錄音
+                      if (await record.hasPermission()) {
+                        await record.start(
+                          const RecordConfig(
+                            sampleRate: 16000,
+                            numChannels: 1,
+                            encoder: AudioEncoder.wav,
+                          ),
+                          path: path,
+                        );
+                        isRecording = true;
+                      }
+                    }
+                    setState(() {});
+                  }
+                  , // 用原本的 record + request
                   backgroundColor: isRecording ? Colors.red : Colors.blue,
                   label: const Icon(Icons.mic, color: Colors.white, size: 20),
                 ),
@@ -144,7 +178,55 @@ class _HomePageState extends State<HomePage> {
                 width: 40,
                 height: 40,
                 child: FloatingActionButton.extended(
-                  onPressed: () async { ... }, // 使用 flutter_sound + tw_stt
+                  onPressed: () async {
+                    final tempDir = await getTemporaryDirectory();
+                    String twPath = '${tempDir.path}/tw_temp.wav';
+
+                    if (isTwRecording) {
+                      await _twRecorder.stopRecorder();
+                      isTwRecording = false;
+
+                      // 呼叫 tw_stt.dart 中的辨識 API
+                      final bytes = await File(twPath).readAsBytes();
+                      final base64Audio = base64Encode(bytes);
+
+                      try {
+                        final response = await http.post(
+                          Uri.parse('http://140.116.245.149:5002/proxy'),
+                          body: {
+                            'lang': 'TA and ZH Medical V1',
+                            'token': '2025@test@asr',
+                            'audio': base64Audio,
+                          },
+                        );
+
+                        if (response.statusCode == 200) {
+                          final result = jsonDecode(response.body);
+                          if (result.containsKey('sentence')) {
+                            _searchController.text = result['sentence'];
+                          } else {
+                            _searchController.text = 'API 回傳缺少 sentence 欄位';
+                          }
+                        } else {
+                          _searchController.text = '辨識失敗：${response.body}';
+                        }
+                      } catch (e) {
+                        _searchController.text = '辨識過程出錯：$e';
+                      }
+                    } else {
+                      await Permission.microphone.request();
+                      await _twRecorder.startRecorder(
+                        toFile: twPath,
+                        codec: Codec.pcm16WAV,
+                        sampleRate: 16000,
+                        numChannels: 1,
+                      );
+                      isTwRecording = true;
+                    }
+
+                    setState(() {});
+                  }
+                  , // 使用 flutter_sound + tw_stt
                   backgroundColor: isTwRecording ? Colors.red : Colors.green,
                   label: const Icon(Icons.mic_external_on, color: Colors.white, size: 20),
                 ),
