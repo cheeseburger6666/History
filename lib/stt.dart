@@ -14,7 +14,7 @@ Future<String?> request(String path) async {
     // 準備請求數據
     Map<String, dynamic> data = {
       "audio": base64Audio,
-      "lang": "STT for course",
+      "lang": "TA and ZH Medical V1",
       "source": "人本and多語",
       "timestamp": false
     };
