@@ -111,47 +111,51 @@ class _HomePageState extends State<HomePage> {
         children: [
           Row(
             children: [
-              SizedBox(
-                width: 40,
-                height: 40,
-                child: FloatingActionButton.extended(
-                  onPressed: () async {
-                    final tempPath = await getTemporaryDirectory();
-                    String path = "${tempPath.path}/audio.wav";
-                    if (isRecording) {
-                      // 停止錄音
-                      await record.stop();
+              Padding(
+                padding: const EdgeInsets.only(left: 12.0), // 左邊留12像素空白，可自行調整
+                child: SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: FloatingActionButton.extended(
+                    onPressed: () async {
+                      final tempPath = await getTemporaryDirectory();
+                      String path = "${tempPath.path}/audio.wav";
+                      if (isRecording) {
+                        // 停止錄音
+                        await record.stop();
 
-                      String? result = await request(path);
-                      if (result != null) {
-                        _searchController.value = TextEditingValue(
-                          text: result,
-                          selection: TextSelection.collapsed(offset: result.length),
-                        );
+                        String? result = await request(path);
+                        if (result != null) {
+                          _searchController.value = TextEditingValue(
+                            text: result,
+                            selection: TextSelection.collapsed(offset: result.length),
+                          );
+                        } else {
+                          _searchController.clear();
+                        }
+                        isRecording = false;
                       } else {
-                        _searchController.clear();
+                        // 開始錄音
+                        if (await record.hasPermission()) {
+                          await record.start(
+                            const RecordConfig(
+                              sampleRate: 16000,
+                              numChannels: 1,
+                              encoder: AudioEncoder.wav,
+                            ),
+                            path: path,
+                          );
+                        }
+                        isRecording = true;
                       }
-                      isRecording = false;
-                    } else {
-                      // 開始錄音
-                      if (await record.hasPermission()) {
-                        await record.start(
-                          const RecordConfig(
-                            sampleRate: 16000,
-                            numChannels: 1,
-                            encoder: AudioEncoder.wav,
-                          ),
-                          path: path,
-                        );
-                      }
-                      isRecording = true;
-                    }
-                    setState(() {});
-                  },
-                  backgroundColor: isRecording ? Colors.red : Colors.blue,
-                  label: const Icon(Icons.mic, color: Colors.white, size: 20),
+                      setState(() {});
+                    },
+                    backgroundColor: isRecording ? Colors.red : Colors.purple[300],
+                    label: const Icon(Icons.mic, color: Colors.white, size: 20),
+                  ),
                 ),
               ),
+
               // 搜尋框
               Expanded(
                 child: Container(
@@ -189,18 +193,20 @@ class _HomePageState extends State<HomePage> {
                 ? Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                //crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Image.asset(
-                    selectedCelebrity!["image"],
-                    height: 200,
-                    fit: BoxFit.cover,
-                  ),
-                  const SizedBox(height: 10),
                   Text(
                     selectedCelebrity!["name"],
+                    textAlign: TextAlign.center,
                     style: const TextStyle(
                         fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 20),
+
+                  Image.asset(
+                    selectedCelebrity!["image"],
+                    height: 350,
+                    fit: BoxFit.cover,
                   ),
                 ],
               ),
