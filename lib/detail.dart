@@ -42,27 +42,8 @@ class CeleBrityDetail extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          TextSpan(
-                            text: '/${celebrity["occupation"] ?? ""}',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.normal,
-                              color: Colors.grey,
-                            ),
-                          ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 15),
-                    Text(
-                      "介紹：\n${wrapEveryNChars(celebrity["introduction"] ?? "", 20)}",
-                      style: const TextStyle(fontSize: 15),
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed:
-                          () => speakText(celebrity["introduction"] ?? "沒有介紹"),
-                      child: const Text("語音播放：介紹內容"),
                     ),
                   ],
                 ),
@@ -73,15 +54,4 @@ class CeleBrityDetail extends StatelessWidget {
       ),
     );
   }
-}
-
-String wrapEveryNChars(String text, int n) {
-  final buffer = StringBuffer();
-  for (int i = 0; i < text.length; i++) {
-    buffer.write(text[i]);
-    if ((i + 1) % n == 0 && i != text.length - 1) {
-      buffer.write('\n');
-    }
-  }
-  return buffer.toString();
 }

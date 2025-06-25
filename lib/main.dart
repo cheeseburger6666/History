@@ -130,10 +130,14 @@ class _HomePageState extends State<HomePage> {
 
                       String? result = await request(path);
                       if (result != null) {
-                        _searchController.text = result;
+                        _searchController.value = TextEditingValue(
+                          text: result,
+                          selection: TextSelection.collapsed(offset: result.length),
+                        );
                       } else {
-                        _searchController.text = "";
+                        _searchController.clear();
                       }
+
 
                       isRecording = false;
                     } else {
@@ -164,10 +168,13 @@ class _HomePageState extends State<HomePage> {
                   height: 50,
                   child: TextField(
                     controller: _searchController,
+                    keyboardType: TextInputType.text,
+                    textInputAction: TextInputAction.search,
                     decoration: const InputDecoration(
                       hintText: 'Search',
                       contentPadding: EdgeInsets.all(10),
                     ),
+                    onSubmitted: _searchCelebrities,
                   ),
                 ),
               ),
