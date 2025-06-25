@@ -5,7 +5,6 @@ import 'package:just_audio/just_audio.dart'; // AudioPlayer
 import 'package:record/record.dart'; // Record
 import 'package:celebrities/stt.dart';
 import 'package:celebrities/tts.dart';
-import 'package:just_audio/just_audio.dart';
 
 final record = AudioRecorder();
 final player = AudioPlayer();
@@ -68,12 +67,20 @@ class _HomePageState extends State<HomePage> {
     {"name": "邱阿旺", "image": "images/邱阿旺.png"},
     {"name": "陳進", "image": "images/陳進.png"},
   ];
-  List showCelebrities = [];
+
+  Map<String, dynamic>? selectedCelebrity;
+
   final TextEditingController _searchController = TextEditingController();
-  @override
-  void initState() {
-    super.initState();
-    showCelebrities = List.from(_celebrities);
+
+  bool isRecording = false;
+
+  void _searchCelebrities(String keyword) {
+    final result = _celebrities
+        .where((celebrity) => celebrity["name"].contains(keyword))
+        .toList();
+    setState(() {
+      selectedCelebrity = result.isNotEmpty ? result.first : null;
+    });
   }
 
   @override
@@ -82,21 +89,9 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  void _searchCelebrities(String keyword) {
-    setState(() {
-      showCelebrities =
-          _celebrities
-              .where((celebrity) => celebrity["name"].contains(keyword))
-              .toList();
-    });
-  }
-
-  bool isRecording = false;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      /*appBar: AppBar(title: const Text('Celebrities')),*/
       appBar: AppBar(
         title: const Text('Taiwanese History Figures'),
         actions: [
@@ -112,7 +107,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-
       body: Column(
         children: [
           Row(
@@ -137,12 +131,9 @@ class _HomePageState extends State<HomePage> {
                       } else {
                         _searchController.clear();
                       }
-
-
                       isRecording = false;
                     } else {
                       // 開始錄音
-
                       if (await record.hasPermission()) {
                         await record.start(
                           const RecordConfig(
@@ -182,24 +173,40 @@ class _HomePageState extends State<HomePage> {
                 icon: const Icon(Icons.search),
                 onPressed: () {
                   _searchCelebrities(_searchController.text);
-                  if (showCelebrities.isEmpty) {
+                  if (selectedCelebrity == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('找不到人物')),
                     );
-                  } else {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CeleBrityDetail(celebrity: showCelebrities.first),
-                      ),
-                    );
                   }
                 },
-
               ),
             ],
           ),
 
+          // 搜尋結果區塊
+          Expanded(
+            child: selectedCelebrity != null
+                ? Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Image.asset(
+                    selectedCelebrity!["image"],
+                    height: 200,
+                    fit: BoxFit.cover,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    selectedCelebrity!["name"],
+                    style: const TextStyle(
+                        fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            )
+                : const SizedBox(),
+          ),
         ],
       ),
     );
