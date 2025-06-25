@@ -1,6 +1,5 @@
 import 'package:celebrities/detail.dart';
 import 'package:flutter/material.dart';
-//import 'package:tw_celebrities/home.dart';
 import 'package:path_provider/path_provider.dart'; // getTemporaryDirectory
 import 'package:just_audio/just_audio.dart'; // AudioPlayer
 import 'package:record/record.dart'; // Record
@@ -12,7 +11,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:celebrities/tw_stt.dart'; // 台語 API
 import 'dart:io';          // 提供 File 類別
 import 'dart:convert';     // 提供 base64Encode、jsonDecode
-import 'package:http/http.dart' as http; // 提供 http.post（注意要裝 http 套件）
+import 'package:http/http.dart' as http; // 提供 http.post
 
 
 final record = AudioRecorder();
@@ -22,15 +21,6 @@ void main() {
   runApp(const MyApp());
 }
 
-/*class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(home: HomePage());
-  }
-}*/
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -40,8 +30,6 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   ThemeMode _themeMode = ThemeMode.system;
-
-
   void toggleTheme(bool isDarkMode) {
     setState(() {
       _themeMode = isDarkMode ? ThemeMode.dark : ThemeMode.light;
@@ -60,14 +48,6 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-/*
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}*/
-
 class HomePage extends StatefulWidget {
   final void Function(bool) onToggleTheme;
   final ThemeMode themeMode;
@@ -77,7 +57,6 @@ class HomePage extends StatefulWidget {
   @override
   State<HomePage> createState() => _HomePageState();
 }
-
 
 class _HomePageState extends State<HomePage> {
   final List _celebrities = [{}];
@@ -111,7 +90,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       /*appBar: AppBar(title: const Text('Celebrities')),*/
       appBar: AppBar(
-        title: const Text('Celebrities'),
+        title: const Text('Taiwanese History Figures'),
         actions: [
           Row(
             children: [
@@ -183,6 +162,7 @@ class _HomePageState extends State<HomePage> {
                     String twPath = '${tempDir.path}/tw_temp.wav';
 
                     if (isTwRecording) {
+                      // 停止錄音
                       await _twRecorder.stopRecorder();
                       isTwRecording = false;
 
@@ -214,6 +194,7 @@ class _HomePageState extends State<HomePage> {
                         _searchController.text = '辨識過程出錯：$e';
                       }
                     } else {
+                      // 開始錄音
                       await Permission.microphone.request();
                       await _twRecorder.startRecorder(
                         toFile: twPath,
