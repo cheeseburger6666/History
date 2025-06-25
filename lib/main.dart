@@ -180,52 +180,26 @@ class _HomePageState extends State<HomePage> {
               ),
               IconButton(
                 icon: const Icon(Icons.search),
-                onPressed: () => _searchCelebrities(_searchController.text),
+                onPressed: () {
+                  _searchCelebrities(_searchController.text);
+                  if (showCelebrities.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('找不到人物')),
+                    );
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CeleBrityDetail(celebrity: showCelebrities.first),
+                      ),
+                    );
+                  }
+                },
+
               ),
             ],
           ),
-          /*Expanded(
-            child: ListView.builder(
-              itemCount: showCelebrities.length,
-              itemBuilder: (context, index) {
-                return Card(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ListTile(
-                    leading: Image.asset(
-                      showCelebrities[index]["image"],
-                      width: 50,
-                      height: 50,
-                      fit: BoxFit.cover,
-                    ),
-                    title: Text(showCelebrities[index]["name"]),
-                    subtitle: Text(showCelebrities[index]["occupation"]),
-                    trailing: IconButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) {
-                              return CeleBrityDetail(
-                                celebrity: showCelebrities[index],
-                              );
-                            },
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.arrow_forward_ios),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),*/
+
         ],
       ),
     );
